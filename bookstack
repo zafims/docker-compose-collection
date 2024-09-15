@@ -1,6 +1,9 @@
 # http://serverIP:6875
 # Username : admin@admin.com⁠
 # Password : password
+#
+# Change - APP_URL=http://192.168.1.1:6875     # Edit with real IP
+#
 ---
 services:
   bookstack:
