@@ -12,7 +12,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Sydney/Australia
+      - TZ=Australia/Sydney
       - APP_URL=http://192.168.1.1:6875       # Edit with real IP
       - DB_HOST=bookstack_db
       - DB_PORT=3306
@@ -33,7 +33,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Sydney/Australia
+      - TZ=Australia/Sydney
       - MYSQL_ROOT_PASSWORD=zafar@123
       - MYSQL_DATABASE=bookstackapp
       - MYSQL_USER=bookstack
