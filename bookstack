@@ -1,3 +1,6 @@
+# Username : admin@admin.com⁠
+# Password : password
+# http://dockerhost:6875
 ---
 services:
   bookstack:
