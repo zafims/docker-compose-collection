@@ -1,0 +1,35 @@
+# Get latest version : https://hub.docker.com/r/checkmk/check-mk-raw/tags
+# User Name: cmkadmin Password: random password (check in Log)
+#
+version: "3.8"
+
+services:
+  checkmk:
+    image: checkmk/check-mk-raw:latest
+    container_name: checkmk
+    user: root
+    security_opt:
+      - no-new-privileges:false
+      - apparmor=unconfined
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+#      - /var/spool/cron:/var/spool/cron:ro
+      - /home/sysadmin/Containers/checkmk/data:/omd/sites
+      - /home/sysadmin/Containers/checkmk/backups:/backups
+    ports:
+      - 9500:5000
+      - 8000:8000
+      - 162:162/udp
+      - 514:514/udp
+      - 514:514/tcp
+    environment:
+      - CMK_SITE_ID=cla
+
+    networks:
+      - portainer_network
+      
+networks:
+  portainer_network:
+    name: portainer_network
+    driver: bridge
