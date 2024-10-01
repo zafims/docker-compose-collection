@@ -1,0 +1,28 @@
+###### Importent choose Read Only VPS link permission + Copy Read Only Key #########
+# Video Ref. https://www.youtube.com/watch?v=4hda0ib4DwQ
+# Text Ref.  https://thehomelab.wiki/books/docker/page/backup-docker-containers-using-resilio-sync
+
+# 1. Make directory for Resilio-sync [In VPS]
+# mkdir -p /home/docker/resilio/config
+# mkdir -p /home/docker/resilio/downloads
+# 2. Install Resilio Sync [In VPS]
+#
+  ---
+version: "2.1"
+services:
+  resilio-sync:
+    image: linuxserver/resilio-sync
+    container_name: resilio-sync
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+      - UMASK_SET=022
+    volumes:
+      - /home/docker/resilio/config:/config
+      - /home/docker/resilio/downloads:/downloads
+      - /:/sync
+    ports:
+      - 8888:8888
+      - 55555:55555
+    restart: unless-stopped
