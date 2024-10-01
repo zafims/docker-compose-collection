@@ -1,73 +1,49 @@
-version: "3.9"
+# Username: xibo_admin
+# Password: password
+
 services:
-  db:
-    image: mariadb:11.3-jammy
-    container_name: Xibo-DB
-    hostname: xibo-db
-    mem_limit: 1g
-    cpu_shares: 768
-    security_opt:
-      - no-new-privileges:true
-    user: 1026:100
-    volumes:
-      - /volume1/docker/xibo/db:/var/lib/mysql:rw
-      - /volume1/docker/xibo/db:/etc/mysql/conf.d:rw
-    env_file:
-      - stack.env
-    environment:
-      TZ: Europe/Bucharest
-      MYSQL_ROOT_PASSWORD: xibopass
-      MYSQL_ROOT_HOST: "0.0.0.0"
-    restart: on-failure:5
-
-  cms-memcached:
-    image: memcached:latest
-    command: memcached -m 15
-    container_name: Xibo-CACHE
-    hostname: xibo-cache
-    mem_limit: 100m
-    cpu_shares: 768
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    user: 1026:100
-    restart: on-failure:5
-
-  xibo-xmr:
-    image: ghcr.io/xibosignage/xibo-xmr:latest
-    container_name: Xibo-XMR
-    hostname: xibo-xmr
-    mem_limit: 256m
-    cpu_shares: 768
-    security_opt:
-      - no-new-privileges:true
-    ports:
-      - 65500:9505
-    env_file:
-      - stack.env
-    restart: on-failure:5
-
-  xibo-web:
-    image: ghcr.io/xibosignage/xibo-cms:latest
-    container_name: Xibo-WEB
-    hostname: cms-web
-    mem_limit: 1g
-    cpu_shares: 768
-    security_opt:
-      - no-new-privileges:true
-    ports:
-      - 65501:80
-    volumes:
-      - /volume1/docker/xibo/custom:/var/www/cms/custom:rw
-      - /volume1/docker/xibo/backup:/var/www/backup:rw
-      - /volume1/docker/xibo/theme:/var/www/cms/web/theme/custom:rw
-      - /volume1/docker/xibo/library:/var/www/cms/library:rw
-      - /volume1/docker/xibo/scripts:/var/www/cms/web/userscripts:rw
-      - /volume1/docker/xibo/certs:/var/www/cms/ca-certs/.*pem:rw
-      - /volume1/docker/xibo/certs:/var/www/cms/ca-certs/.*crt:rw
-    env_file:
-      - stack.env
-    environment:
-      XMR_HOST: xibo-xmr
-      CMS_USE_MEMCACHED: true
-    restart: on-failure:5
+    cms-db:
+        image: mysql:8.0
+        volumes:
+            - "./shared/db:/var/lib/mysql:Z"
+        environment:
+            - MYSQL_DATABASE=cms
+            - MYSQL_USER=cms
+            - MYSQL_RANDOM_ROOT_PASSWORD=yes
+        mem_limit: 1g
+        env_file: config.env
+        restart: always
+    cms-xmr:
+        image: ghcr.io/xibosignage/xibo-xmr:0.11
+        ports:
+            - "9505:9505"
+        restart: always
+        mem_limit: 256m
+        env_file: config.env
+    cms-web:
+        image: ghcr.io/xibosignage/xibo-cms:release-4.1.0
+        volumes:
+            - "./shared/cms/custom:/var/www/cms/custom:Z"
+            - "./shared/backup:/var/www/backup:Z"
+            - "./shared/cms/web/theme/custom:/var/www/cms/web/theme/custom:Z"
+            - "./shared/cms/library:/var/www/cms/library:Z"
+            - "./shared/cms/web/userscripts:/var/www/cms/web/userscripts:Z"
+            - "./shared/cms/ca-certs:/var/www/cms/ca-certs:Z"
+        restart: always
+        environment:
+            - MYSQL_HOST=cms-db
+            - XMR_HOST=cms-xmr
+            - CMS_USE_MEMCACHED=true
+            - MEMCACHED_HOST=cms-memcached
+        env_file: config.env
+        ports:
+            - "80:80"
+        mem_limit: 1g
+    cms-memcached:
+        image: memcached:alpine
+        command: memcached -m 15
+        restart: always
+        mem_limit: 100M
+    cms-quickchart:
+      image: ianw/quickchart
+      restart: always
