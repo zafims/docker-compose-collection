@@ -1,5 +1,6 @@
 # Web Access: <server IP>:6806
 # Pass: zircon#148
+
 version: "3.9"
 services:
   main:
@@ -15,3 +16,5 @@ services:
       - TZ=AEST
       - PUID=1001  # Customize user ID
       - PGID=1002  # Customize group ID
+
+# After Installation Run this command: chown -R 1001:1002 /siyuan/workspace
