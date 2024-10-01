@@ -1,0 +1,122 @@
+# Web Access: <server IP>:9010
+
+version: "3.9"
+services:
+  redis:
+    image: redis
+    command:
+      - /bin/sh
+      - -c
+      - redis-server --requirepass redispass
+    container_name: Penpot-REDIS
+    hostname: penpot-redis
+    mem_limit: 256m
+    mem_reservation: 50m
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: 1026:100
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+    volumes:
+      - /volume1/docker/penpot/redis:/data:rw
+    environment:
+      TZ: Australia/Sydney
+    restart: on-failure:5
+
+  db:
+    image: postgres:16
+    container_name: Penpot-DB
+    hostname: penpot-db
+    mem_limit: 512m
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "penpot", "-U", "penpotuser"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    volumes:
+      - /volume1/docker/penpot/db:/var/lib/postgresql/data:rw
+    environment:
+      POSTGRES_DB: penpot
+      POSTGRES_USER: penpotuser
+      POSTGRES_PASSWORD: penpotpass
+      POSTGRES_INITDB_ARGS: --data-checksums
+    restart: on-failure:5
+
+  penpot-exporter:
+    image: penpotapp/exporter:main
+    container_name: Penpot-EXPORTER
+    hostname: penpot-exporter
+    mem_limit: 1g
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      #PENPOT_PUBLIC_URI: https://penpot.yourname.synology.me
+      PENPOT_REDIS_URI: redis://:redispass@penpot-redis/0
+    restart: on-failure:5
+
+  penpot-backend:
+    image: penpotapp/backend:main
+    container_name: Penpot-BACKEND
+    hostname: penpot-backend
+    mem_limit: 3g
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /volume1/docker/penpot/assets:/opt/data/assets:rw
+    environment:
+      PENPOT_FLAGS: enable-registration enable-login-with-password disable-email-verification enable-prepl-server enable-smtp
+      PENPOT_SECRET_KEY: MJtXTJEcYGib7jU4Azxfo3P8fHvu2arFrs
+      ## The PREPL host. Mainly used for external programatic access to penpot backend
+      ## (example: admin). By default it listen on `localhost` but if you are going to use
+      ## the `admin`, you will need to uncomment this and set the host to `0.0.0.0`.
+      # - PENPOT_PREPL_HOST=0.0.0.0
+      #PENPOT_PUBLIC_URI: https://penpot.yourname.synology.me
+      PENPOT_DATABASE_URI: postgresql://penpot-db/penpot
+      PENPOT_DATABASE_USERNAME: penpotuser
+      PENPOT_DATABASE_PASSWORD: penpotpass
+      PENPOT_REDIS_URI: redis://:redispass@penpot-redis/0
+      PENPOT_ASSETS_STORAGE_BACKEND: assets-fs
+      PENPOT_STORAGE_ASSETS_FS_DIRECTORY: /opt/data/assets
+      PENPOT_TELEMETRY_ENABLED: false
+      PENPOT_SMTP_HOST: smtp.gmail.com
+      PENPOT_SMTP_DEFAULT_FROM: Your-own-gmail-address
+      PENPOT_SMTP_DEFAULT_REPLY_TO: Your-own-gmail-address
+      PENPOT_SMTP_PORT: 587
+      PENPOT_SMTP_USERNAME: Your-own-gmail-address
+      PENPOT_SMTP_PASSWORD: Your-own-app-password
+      PENPOT_SMTP_TLS: true
+      PENPOT_SMTP_SSL: false
+    restart: on-failure:5
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  penpot-frontend:
+    image: penpotapp/frontend:main
+    container_name: Penpot-FRONTEND
+    hostname: penpot-frontend
+    mem_limit: 1g
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - 9010:80
+    volumes:
+      - /volume1/docker/penpot/assets:/opt/data/assets:rw
+    environment:
+      PENPOT_FLAGS: enable-registration enable-login-with-password
+    restart: on-failure:5
+    depends_on:
+      penpot-backend:
+        condition: service_started
+      penpot-exporter:
+        condition: service_started
