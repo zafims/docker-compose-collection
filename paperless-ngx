@@ -3,19 +3,6 @@
 #
 #
 #
-# - Open portainer Stacks list and click 'Add stack'
-# - Paste the contents of this file and assign a name, e.g. 'paperless'
-# - Click 'Deploy the stack' and wait for it to be deployed
-# - Open the list of containers, select paperless_webserver_1
-# - Click 'Console' and then 'Connect' to open the command line inside the container
-# - Run 'python3 manage.py createsuperuser' to create a user
-# - Exit the console
-#
-#
-# - Paperless listens on port 8010.
-#
-#
-#
 #
 
 services:
