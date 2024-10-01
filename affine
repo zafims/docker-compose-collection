@@ -1,10 +1,9 @@
-Change these
+# Change these
+#      - AFFINE_ADMIN_EMAIL=yourown@email
+#      - AFFINE_ADMIN_PASSWORD=zafims.au
+#       Web Access: <server IP>:3010
 
-      - AFFINE_ADMIN_EMAIL=yourown@email
-      - AFFINE_ADMIN_PASSWORD=zafims.au
-Web Access: <server IP>:3010
-
---------------------- 1st Way ----------------------
+# --------------------- 1st Way ----------------------
 
 version: '3.9'
 services:
@@ -71,11 +70,7 @@ services:
       POSTGRES_DB: affine
       PGDATA: /var/lib/postgresql/data/pgdata
 
-
-
-
-
--------------- 2nd Way ----------------------
+# -------------- 2nd Way ----------------------
 
 # docker network create traefik-network
 # docker network create affine-network
@@ -84,6 +79,5 @@ services:
 # cd affine-traefik-letsencrypt-docker-compose
 
 # docker compose -f affine-traefik-letsencrypt-docker-compose.yml -p affine up -d
-
 
 # http://localhost:3010
