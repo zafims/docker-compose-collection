@@ -1,5 +1,5 @@
-# Web Access: <server IP>:8010
-#
+# Web Access: <server IP>:8010  or 8777
+# zafims/imam&Redx18
 #
 #
 #
@@ -12,90 +12,129 @@
 # - Exit the console
 #
 #
-#
-#
-# Docker Compose file for running paperless from the Docker Hub.
-# This file contains everything paperless needs to run.
-# Paperless supports amd64, arm and arm64 hardware.
-#
-# All compose files of paperless configure paperless in the following way:
-#
-# - Paperless is (re)started on system boot, if it was running before shutdown.
-# - Docker volumes for storing data are managed by Docker.
-# - Folders for importing and exporting files are created in the same directory
-#   as this file and mounted to the correct folders inside the container.
 # - Paperless listens on port 8010.
 #
-# In addition to that, this Docker Compose file adds the following optional
-# configurations:
-#
-# - Instead of SQLite (default), PostgreSQL is used as the database server.
-#
-# To install and update paperless with this file, do the following:
 #
 #
 #
-# For more extensive installation and update instructions, refer to the
-# documentation.
 
 services:
-  broker:
-    image: docker.io/library/redis:7
-    restart: unless-stopped
+  redis:
+    image: redis:7
+    command:
+      - /bin/sh
+      - -c
+      - redis-server --requirepass redispass
+    container_name: PaperlessNGX-REDIS
+    hostname: paper-redis
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    user: 1026:100
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
     volumes:
-      - redisdata:/data
+      - /volume1/docker/paperlessngx/redis:/data:rw
+    environment:
+      TZ: Australia/Sydney
+    restart: on-failure:5
 
   db:
-    image: docker.io/library/postgres:16
-    restart: unless-stopped
+    image: postgres:17
+    container_name: PaperlessNGX-DB
+    hostname: paper-db
+    mem_limit: 1g
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "paperless", "-U", "paperlessuser"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - /volume1/docker/paperlessngx/db:/var/lib/postgresql/data:rw
     environment:
       POSTGRES_DB: paperless
-      POSTGRES_USER: paperless
-      POSTGRES_PASSWORD: paperless
+      POSTGRES_USER: paperlessuser
+      POSTGRES_PASSWORD: paperlesspass
+    restart: on-failure:5
 
-  webserver:
+  gotenberg:
+    image: gotenberg/gotenberg:latest
+    container_name: PaperlessNGX-GOTENBERG
+    hostname: gotenberg
+    security_opt:
+      - no-new-privileges:true
+    user: 1026:100
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=true"
+      - "--chromium-allow-list=file:///tmp/.*"
+    restart: on-failure:5
+
+  tika:
+    image: ghcr.io/paperless-ngx/tika:latest
+    container_name: PaperlessNGX-TIKA
+    hostname: tika
+    security_opt:
+      - no-new-privileges:true
+    user: 1026:100
+    restart: on-failure:5
+
+  paperless:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
-    restart: unless-stopped
-    depends_on:
-      - db
-      - broker
+    container_name: PaperlessNGX
+    hostname: paperless-ngx
+    mem_limit: 6g
+    cpu_shares: 1024
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "-S", "--max-time", "2", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     ports:
-      - "8010:8000"
+      - 8777:8000
     volumes:
-      - data:/usr/src/paperless/data
-      - media:/usr/src/paperless/media
-      - ./export:/usr/src/paperless/export
-      - ./consume:/usr/src/paperless/consume
+      - /volume1/docker/paperlessngx/data:/usr/src/paperless/data:rw
+      - /volume1/docker/paperlessngx/media:/usr/src/paperless/media:rw
+      - /volume1/docker/paperlessngx/export:/usr/src/paperless/export:rw
+      - /volume1/docker/paperlessngx/consume:/usr/src/paperless/consume:rw
+      - /volume1/docker/paperlessngx/trash:/usr/src/paperless/trash:rw
     environment:
-      PAPERLESS_REDIS: redis://broker:6379
-      PAPERLESS_DBHOST: db
-# The UID and GID of the user used to run paperless in the container. Set this
-# to your UID and GID on the host so that you have write access to the
-# consumption directory.
-      USERMAP_UID: 1000
+      PAPERLESS_REDIS: redis://:redispass@paper-redis:6379
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBHOST: paper-db
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: paperlessuser
+      PAPERLESS_DBPASS: paperlesspass
+      PAPERLESS_EMPTY_TRASH_DIR: ../trash
+      PAPERLESS_FILENAME_FORMAT: '{created_year}/{correspondent}/{document_type}/{title}'
+      PAPERLESS_OCR_ROTATE_PAGES_THRESHOLD: 6
+      PAPERLESS_TASK_WORKERS: 1
+      USERMAP_UID: 1026
       USERMAP_GID: 100
-# Additional languages to install for text recognition, separated by a
-# whitespace. Note that this is
-# different from PAPERLESS_OCR_LANGUAGE (default=eng), which defines the
-# language used for OCR.
-# The container installs English, German, Italian, Spanish and French by
-# default.
-# See https://packages.debian.org/search?keywords=tesseract-ocr-&searchon=names&suite=buster
-# for available languages.
-      #PAPERLESS_OCR_LANGUAGES: tur ces
-# Adjust this key if you plan to make paperless available publicly. It should
-# be a very long sequence of random characters. You don't need to remember it.
-      #PAPERLESS_SECRET_KEY: change-me
-# Use this variable to set a timezone for the Paperless Docker containers. If not specified, defaults to UTC.
       PAPERLESS_TIME_ZONE: Australia/Sydney
-# The default language to use for OCR. Set this to the language most of your
-# documents are written in.
+      PAPERLESS_ADMIN_USER: zafims
+      PAPERLESS_ADMIN_PASSWORD: imam&Redx18
+      #PAPERLESS_URL: https://paperlessngx.yourname.synology.me
+      #PAPERLESS_CSRF_TRUSTED_ORIGINS: https://paperlessngx.yourname.synology.me
       PAPERLESS_OCR_LANGUAGE: eng
-
-volumes:
-  data:
-  media:
-  pgdata:
-  redisdata:
+      PAPERLESS_TIKA_ENABLED: 1
+      #PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
+      #PAPERLESS_TIKA_ENDPOINT: http://tika:9998
+    restart: on-failure:5
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tika:
+        condition: service_started
+      gotenberg:
+        condition: service_started
