@@ -1,5 +1,19 @@
 # Web Access: <server IP>:8010
-
+#
+#
+#
+#
+# - Open portainer Stacks list and click 'Add stack'
+# - Paste the contents of this file and assign a name, e.g. 'paperless'
+# - Click 'Deploy the stack' and wait for it to be deployed
+# - Open the list of containers, select paperless_webserver_1
+# - Click 'Console' and then 'Connect' to open the command line inside the container
+# - Run 'python3 manage.py createsuperuser' to create a user
+# - Exit the console
+#
+#
+#
+#
 # Docker Compose file for running paperless from the Docker Hub.
 # This file contains everything paperless needs to run.
 # Paperless supports amd64, arm and arm64 hardware.
@@ -19,13 +33,7 @@
 #
 # To install and update paperless with this file, do the following:
 #
-# - Open portainer Stacks list and click 'Add stack'
-# - Paste the contents of this file and assign a name, e.g. 'paperless'
-# - Click 'Deploy the stack' and wait for it to be deployed
-# - Open the list of containers, select paperless_webserver_1
-# - Click 'Console' and then 'Connect' to open the command line inside the container
-# - Run 'python3 manage.py createsuperuser' to create a user
-# - Exit the console
+#
 #
 # For more extensive installation and update instructions, refer to the
 # documentation.
