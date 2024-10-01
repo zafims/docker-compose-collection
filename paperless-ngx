@@ -1,4 +1,4 @@
-# Web Access: <server IP>:8010  or 8777
+# Web Access: <server IP>:8777
 # zafims/imam&Redx18
 #
 #
@@ -113,7 +113,7 @@ services:
       PAPERLESS_DBNAME: paperless
       PAPERLESS_DBUSER: paperlessuser
       PAPERLESS_DBPASS: paperlesspass
-      PAPERLESS_EMPTY_TRASH_DIR: ../trash
+      #PAPERLESS_EMPTY_TRASH_DIR: ../trash
       PAPERLESS_FILENAME_FORMAT: '{created_year}/{correspondent}/{document_type}/{title}'
       PAPERLESS_OCR_ROTATE_PAGES_THRESHOLD: 6
       PAPERLESS_TASK_WORKERS: 1
@@ -126,8 +126,8 @@ services:
       #PAPERLESS_CSRF_TRUSTED_ORIGINS: https://paperlessngx.yourname.synology.me
       PAPERLESS_OCR_LANGUAGE: eng
       PAPERLESS_TIKA_ENABLED: 1
-      #PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
-      #PAPERLESS_TIKA_ENDPOINT: http://tika:9998
+      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
+      PAPERLESS_TIKA_ENDPOINT: http://tika:9998
     restart: on-failure:5
     depends_on:
       db:
