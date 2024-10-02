@@ -1,0 +1,33 @@
+install Docker + Docker Compose
+
+1. apt install unzip
+
+2.
+curl -L -O https://github.com/tryretool/retool-onpremise/archive/master.zip \
+&& unzip master.zip \
+&& cd retool-onpremise-master
+
+3. git clone https://github.com/tryretool/retool-onpremise.git
+
+4. ./install.sh
+
+5. Goto to: https://my.retool.com/
+		Generate Lic.
+
+5. nano docker.env
+		Add Lic.: i.e. SSOP_dbea4a5c-d8b2-4ba8-beaf-791f935760dc
+		 uncomment: COOKIE_INSECURE=true
+
+6. # nano Dockerfile
+	Replace : tryretool/backend:latest
+   # nano CodeExecutor.Dockerfile
+	Replace: tryretool/code-executor-service:latest
+
+6. docker-compose up
+
+Web Access: http://142.171.91.203/auth/signup
+
+[Optional]
+
+7. For Update: ./update_retool.sh
+8. For Rebuild: docker-compose up --build
