@@ -1,13 +1,23 @@
 # mkdir -p /home/docker/coolify/dev/
 # cd /home/docker/coolify/dev/
 # nano Dockerfile
-# Paste supplied code
-
+# Paste supplied code ( coolifyDockerfile ) in Dockerfile
+#
+# mkdir -p /home/docker/coolify/coolify-realtime/
+# cd /home/docker/coolify/coolify-realtime/
+# nano Dockerfile
+# Paste supplied code ( coolify-realtimeDockerfile ) in Dockerfile
+#
+# mkdir -p /home/docker/coolify/dev/
+# cd /home/docker/coolify/dev/
+# nano Dockerfile
+# Paste supplied code ( coolifyDockerfile ) in Dockerfile
+#
 services:
   coolify:
     build:
       context: .
-      dockerfile: ./docker/dev/Dockerfile
+      dockerfile: ./home/docker/coolify/dev/Dockerfile
     ports:
       - 8000:80
     environment:
