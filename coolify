@@ -4,7 +4,7 @@ services:
   coolify:
     build:
       context: .
-      dockerfile: ./docker/coolify/dev/Dockerfile
+      dockerfile: ./docker/dev/Dockerfile
     ports:
       - 8000:80
     environment:
