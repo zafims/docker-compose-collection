@@ -1,5 +1,11 @@
-# Copy docker folder to /
+# Copy coolify-docker.zip folder to /
+# cd /
+# unzip coolify-docker.zip
+# rename docker
+# Goto Portainer and use coolify.env and below code to deploy
 # Use .env file
+#
+#
 #
 services:
   coolify:
